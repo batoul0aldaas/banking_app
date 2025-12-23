@@ -1,5 +1,3 @@
-import '../../domain/entities/scheduled_transaction.dart';
-import '../../domain/state_pattern/schedule_status_factory.dart';
 
 class ScheduledTransactionModel {
   final String referenceNumber;
@@ -48,52 +46,45 @@ class ScheduledTransactionModel {
 
   factory ScheduledTransactionModel.fromJson(Map<String, dynamic> json) {
     return ScheduledTransactionModel(
-      referenceNumber: json['reference_number'],
-      status: json['status'],
-      type: json['type'],
-      amount: (json['amount'] as num).toDouble(),
-      currency: json['currency'],
-      accountReference: json['account_reference'],
-      relatedAccountReference: json['related_account_reference'],
-      frequency: json['frequency'],
-      dayOfWeek: json['day_of_week'],
-      dayOfMonth: json['day_of_month'],
-      timeOfDay: json['time_of_day'],
-      timezone: json['timezone'],
-      nextRunAt: DateTime.parse(json['next_run_at']),
-      lastRunAt: json['last_run_at'] != null ? DateTime.parse(json['last_run_at']) : null,
-      runsCount: json['runs_count'],
-      lastError: json['last_error'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      referenceNumber: json['reference_number']?.toString() ?? '',
+      status: json['status']?.toString() ?? '',
+      type: json['type']?.toString() ?? '',
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      currency: json['currency']?.toString() ?? '',
+      accountReference: json['account_reference']?.toString(),
+      relatedAccountReference: json['related_account_reference']?.toString(),
+      frequency: json['frequency']?.toString() ?? '',
+      dayOfWeek: json['day_of_week'] is int
+          ? json['day_of_week'] as int
+          : int.tryParse(json['day_of_week']?.toString() ?? ''),
+      dayOfMonth: json['day_of_month'] is int
+          ? json['day_of_month'] as int
+          : int.tryParse(json['day_of_month']?.toString() ?? ''),
+      timeOfDay: json['time_of_day']?.toString() ?? '',
+      timezone: json['timezone']?.toString() ?? '',
+      nextRunAt: _safeDate(json['next_run_at']),
+      lastRunAt:
+          json['last_run_at'] != null ? _safeDate(json['last_run_at']) : null,
+      runsCount: json['runs_count'] is int
+          ? json['runs_count'] as int
+          : int.tryParse(json['runs_count']?.toString() ?? '') ?? 0,
+      lastError: json['last_error']?.toString(),
+      createdAt: _safeDate(json['created_at']),
+      updatedAt: _safeDate(json['updated_at']),
     );
+  }
+
+  static DateTime _safeDate(dynamic value) {
+    final asString = value?.toString();
+    if (asString == null || asString.isEmpty) {
+      return DateTime.now();
+    }
+    return DateTime.parse(asString);
   }
 
   static List<ScheduledTransactionModel> listFromJson(List list) {
     return list.map((e) => ScheduledTransactionModel.fromJson(e)).toList();
   }
 
-  /*ScheduledTransactionEntity toEntity() {
-    return ScheduledTransactionEntity(
-      referenceNumber: referenceNumber,
-      status: ScheduleStatusFactory.fromString(status),
-      type: type,
-      amount: amount,
-      currency: currency,
-      accountReference: accountReference,
-      relatedAccountReference: relatedAccountReference,
-      frequency: frequency,
-      dayOfWeek: dayOfWeek,
-      dayOfMonth: dayOfMonth,
-      timeOfDay: timeOfDay,
-      timezone: timezone,
-      nextRunAt: nextRunAt,
-      lastRunAt: lastRunAt,
-      runsCount: runsCount,
-      lastError: lastError,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-    );
-  }*/
 }
 

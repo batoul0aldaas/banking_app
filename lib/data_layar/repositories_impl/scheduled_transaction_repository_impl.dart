@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/adapter_pattern/scheduled_transaction_adapter.dart';
 import '../../domain/entities/scheduled_transaction.dart';
+import '../../domain/adapter_pattern/scheduled_transaction_request.dart';
 import '../data_api/api_endpoints.dart';
 import '../data_api/api_service.dart';
 import '../models/scheduled_response_model.dart';
@@ -10,7 +11,12 @@ import '../repositories/scheduled_transaction_repository.dart';
 class ScheduledTransactionRepositoryImpl
     implements ScheduledTransactionRepository {
   final ApiService api;
-  ScheduledTransactionRepositoryImpl({required this.api});
+  final ScheduledTransactionAdapter adapter;
+
+  ScheduledTransactionRepositoryImpl({
+    required this.api,
+    ScheduledTransactionAdapter? adapter,
+  }) : adapter = adapter ?? const DefaultScheduledTransactionAdapter();
 
   Future<String> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -29,7 +35,7 @@ class ScheduledTransactionRepositoryImpl
           (json) => ScheduledTransactionModel.listFromJson(json),
     );
 
-    return ScheduledTransactionAdapter.listModelToEntity(response.data);
+    return adapter.listFromModels(response.data);
 
 
   }
@@ -47,7 +53,7 @@ class ScheduledTransactionRepositoryImpl
           (json) => ScheduledTransactionModel.fromJson(json),
     );
 
-    return ScheduledTransactionAdapter.modelToEntity(response.data);
+    return adapter.fromModel(response.data);
   }
 
   @override
@@ -63,21 +69,22 @@ class ScheduledTransactionRepositoryImpl
     required String timeOfDay,
     required String timezone,
   }) async {
+    final request = ScheduledTransactionRequest(
+      accountReference: accountReference,
+      relatedAccountReference: relatedAccountReference,
+      type: type,
+      amount: amount,
+      currency: currency,
+      frequency: frequency,
+      dayOfWeek: dayOfWeek,
+      dayOfMonth: dayOfMonth,
+      timeOfDay: timeOfDay,
+      timezone: timezone,
+    );
+
     final res = await api.postMultipart(
       ApiEndpoints.scheduledTransactions,
-      fields: {
-        "account_reference": accountReference,
-        if (relatedAccountReference != null)
-          "related_account_reference": relatedAccountReference,
-        "type": type,
-        "amount": amount,
-        "currency": currency,
-        "frequency": frequency,
-        if (dayOfWeek != null) "day_of_week": dayOfWeek,
-        if (dayOfMonth != null) "day_of_month": dayOfMonth,
-        "time_of_day": timeOfDay,
-        "timezone": timezone,
-      },
+      fields: adapter.toCreatePayload(request),
       token: await _getToken(),
     );
 
@@ -86,7 +93,7 @@ class ScheduledTransactionRepositoryImpl
           (json) => ScheduledTransactionModel.fromJson(json),
     );
 
-    return ScheduledTransactionAdapter.modelToEntity(response.data);
+    return adapter.fromModel(response.data);
   }
 
   @override
@@ -105,6 +112,6 @@ class ScheduledTransactionRepositoryImpl
           (json) => ScheduledTransactionModel.fromJson(json),
     );
 
-    return ScheduledTransactionAdapter.modelToEntity(response.data);
+    return adapter.fromModel(response.data);
   }
 }
