@@ -20,64 +20,61 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
     on<AccountUpdateRequested>(_onUpdate);
     on<AccountChangeStateRequested>(_onChangeState);
     on<AccountCalculateInterestRequested>(_onCalculateInterest);
-
   }
 
-
   Future<void> _onLoad(
-      AccountLoadRequested event,
-      Emitter<AccountState> emit,
-      ) async {
+    AccountLoadRequested event,
+    Emitter<AccountState> emit,
+  ) async {
     emit(AccountLoading());
     try {
       final res = await repository.getAccounts();
       final list = res['data'] as List;
 
-      final accounts =
-      list.map((e) => AccountModel.fromJson(e)).toList();
+      final rootAccounts = list
+          .map((e) => AccountModel.fromJson(e as Map<String, dynamic>))
+          .toList();
 
-      _cachedAccounts
-        ..clear()
-        ..addAll(accounts);
-      final Map<String, AccountGroup> groups = {};
+      _cachedAccounts..clear();
 
-      for (final acc in accounts) {
-        if (acc.parentReference != null) {
-          groups.putIfAbsent(
-            acc.parentReference!,
-                () => AccountGroup(
-              referenceNumber: acc.parentReference!,
-              name: 'Group ${acc.parentReference}',
-            ),
-          );
-
-          groups[acc.parentReference!]!
-              .add(AccountLeaf(acc));
+      void collect(Account account) {
+        _cachedAccounts.add(account);
+        final children = account.children;
+        if (children != null && children.isNotEmpty) {
+          for (final child in children) {
+            collect(child);
+          }
         }
       }
+
+      for (final root in rootAccounts) {
+        collect(root);
+      }
+
       emit(AccountLoadSuccess(List.unmodifiable(_cachedAccounts)));
     } catch (e) {
       emit(AccountFailure(e.toString()));
     }
   }
+
   Future<void> _onDetails(
-      AccountDetailsRequested event,
-      Emitter<AccountState> emit,
-      ) async {
+    AccountDetailsRequested event,
+    Emitter<AccountState> emit,
+  ) async {
     emit(AccountLoading());
     try {
-      final res =
-      await repository.getAccountById(event.referenceNumber);
+      final res = await repository.getAccountById(event.referenceNumber);
       final account = AccountModel.fromJson(res['data']);
       emit(AccountDetailsSuccess(account));
     } catch (e) {
       emit(AccountFailure(e.toString()));
     }
   }
+
   Future<void> _onCreate(
-      AccountCreateRequested event,
-      Emitter<AccountState> emit,
-      ) async {
+    AccountCreateRequested event,
+    Emitter<AccountState> emit,
+  ) async {
     emit(AccountLoading());
     try {
       final res = await repository.createAccount(
@@ -95,10 +92,11 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
       emit(AccountFailure(e.toString()));
     }
   }
+
   Future<void> _onUpdate(
-      AccountUpdateRequested event,
-      Emitter<AccountState> emit,
-      ) async {
+    AccountUpdateRequested event,
+    Emitter<AccountState> emit,
+  ) async {
     emit(AccountLoading());
     try {
       final res = await repository.updateAccount(
@@ -111,7 +109,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
 
       final updated = AccountModel.fromJson(res['data']);
       final i = _cachedAccounts.indexWhere(
-            (a) => a.referenceNumber == event.referenceNumber,
+        (a) => a.referenceNumber == event.referenceNumber,
       );
 
       if (i != -1) _cachedAccounts[i] = updated;
@@ -122,10 +120,11 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
       emit(AccountFailure(e.toString()));
     }
   }
+
   Future<void> _onChangeState(
-      AccountChangeStateRequested event,
-      Emitter<AccountState> emit,
-      ) async {
+    AccountChangeStateRequested event,
+    Emitter<AccountState> emit,
+  ) async {
     emit(AccountActionLoading());
     try {
       final res = await repository.changeAccountState(
@@ -135,7 +134,7 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
 
       final updated = AccountModel.fromJson(res['data']);
       final i = _cachedAccounts.indexWhere(
-            (a) => a.referenceNumber == event.referenceNumber,
+        (a) => a.referenceNumber == event.referenceNumber,
       );
 
       if (i != -1) _cachedAccounts[i] = updated;
@@ -148,9 +147,9 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
   }
 
   Future<void> _onCalculateInterest(
-      AccountCalculateInterestRequested event,
-      Emitter<AccountState> emit,
-      ) async {
+    AccountCalculateInterestRequested event,
+    Emitter<AccountState> emit,
+  ) async {
     emit(AccountInterestLoading());
     try {
       final res = await repository.calculateInterest(
@@ -166,5 +165,4 @@ class AccountBloc extends Bloc<AccountEvent, AccountState> {
       emit(AccountInterestFailure(e.toString()));
     }
   }
-
 }
