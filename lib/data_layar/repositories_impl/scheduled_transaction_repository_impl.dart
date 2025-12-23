@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../domain/adapter_pattern/scheduled_transaction_adapter.dart';
 import '../../domain/entities/scheduled_transaction.dart';
 import '../data_api/api_endpoints.dart';
 import '../data_api/api_service.dart';
@@ -28,7 +29,9 @@ class ScheduledTransactionRepositoryImpl
           (json) => ScheduledTransactionModel.listFromJson(json),
     );
 
-    return response.data;
+    return ScheduledTransactionAdapter.listModelToEntity(response.data);
+
+
   }
 
   @override
@@ -44,7 +47,7 @@ class ScheduledTransactionRepositoryImpl
           (json) => ScheduledTransactionModel.fromJson(json),
     );
 
-    return response.data;
+    return ScheduledTransactionAdapter.modelToEntity(response.data);
   }
 
   @override
@@ -83,7 +86,7 @@ class ScheduledTransactionRepositoryImpl
           (json) => ScheduledTransactionModel.fromJson(json),
     );
 
-    return response.data;
+    return ScheduledTransactionAdapter.modelToEntity(response.data);
   }
 
   @override
@@ -102,6 +105,6 @@ class ScheduledTransactionRepositoryImpl
           (json) => ScheduledTransactionModel.fromJson(json),
     );
 
-    return response.data;
+    return ScheduledTransactionAdapter.modelToEntity(response.data);
   }
 }

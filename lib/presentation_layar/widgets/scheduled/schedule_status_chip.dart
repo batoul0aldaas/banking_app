@@ -1,30 +1,25 @@
 import 'package:flutter/material.dart';
+import '../../../domain/entities/schedule_status.dart';
 
 class ScheduleStatusChip extends StatelessWidget {
-  final String status;
+  final ScheduleStatus status;
 
-  const ScheduleStatusChip({super.key, required this.status});
-
-  Color _color() {
-    switch (status) {
-      case 'active':
-        return Colors.green;
-      case 'paused':
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
-  }
+  const ScheduleStatusChip({
+    super.key,
+    required this.status,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final color = _color();
     return Chip(
       label: Text(
-        status.toUpperCase(),
-        style: TextStyle(color: color, fontWeight: FontWeight.bold),
+        status.label,
+        style: TextStyle(
+          color: status.color,
+          fontWeight: FontWeight.bold,
+        ),
       ),
-      backgroundColor: color.withOpacity(.15),
+      backgroundColor: status.color.withOpacity(.15),
     );
   }
 }

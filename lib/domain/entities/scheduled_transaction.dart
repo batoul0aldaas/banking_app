@@ -1,8 +1,10 @@
+import 'package:banking_app/domain/entities/schedule_status.dart';
 import 'package:equatable/equatable.dart';
 
 class ScheduledTransactionEntity extends Equatable {
   final String referenceNumber;
-  final String status;
+ // final String status;
+  final ScheduleStatus status;
   final String type;
   final double amount;
   final String currency;

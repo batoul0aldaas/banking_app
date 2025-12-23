@@ -72,11 +72,19 @@ class ScheduledDetailsPage extends StatelessWidget {
                       ),
                     );
                   },
-                  child: Text(
-                    s.status == 'active'
-                        ? 'Pause'
-                        : 'Activate',
+                  child: ElevatedButton(
+                    onPressed: s.status.canToggle
+                        ? () {
+                      context.read<ScheduledTransactionBloc>().add(
+                        ToggleScheduleStatusRequested(
+                          s.referenceNumber,
+                        ),
+                      );
+                    }
+                        : null,
+                    child: Text(s.status.actionLabel),
                   ),
+
                 )
               ],
             );
