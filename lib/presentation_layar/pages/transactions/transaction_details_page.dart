@@ -34,6 +34,12 @@ class _TransactionDetailsPageState extends State<TransactionDetailsPage> {
 
     return AppScaffold(
       title: 'Transaction Details',
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pop(context, true);
+        },
+      ),
       body: BlocBuilder<TransactionBloc, TransactionState>(
         builder: (context, state) {
           if (state is TransactionLoading) {

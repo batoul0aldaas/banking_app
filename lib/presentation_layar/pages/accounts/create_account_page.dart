@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../bloc_layar/accounts/account_bloc.dart';
 import '../../../bloc_layar/accounts/account_event.dart';
 import '../../../bloc_layar/accounts/account_state.dart';
+import '../../../domain/entities/account_create_request.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/primary_button.dart';
 
@@ -43,6 +44,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       },
       child: AppScaffold(
         title: "Create Account",
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+        ),
+
         body: Center(
           child: SingleChildScrollView(
             child: Container(
@@ -103,12 +111,18 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                             label: "Create",
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
-                                final parent = _parentRef.text.trim();
+                                final builder = AccountCreateRequestBuilder()
+                                    .withName(_name.text)
+                                    .withType(_type.text)
+                                    .withParentReference(_parentRef.text);
+
+                                final request = builder.build();
+
                                 context.read<AccountBloc>().add(
                                   AccountCreateRequested(
-                                    name: _name.text.trim(),
-                                    type: _type.text.trim(),
-                                    parentReference: parent.isEmpty ? null : parent,
+                                    name: request.name,
+                                    type: request.type,
+                                    parentReference: request.parentReference,
                                   ),
                                 );
                               }

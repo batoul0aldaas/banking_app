@@ -4,6 +4,7 @@ import '../../../bloc_layar/accounts/account_bloc.dart';
 import '../../../bloc_layar/accounts/account_event.dart';
 import '../../../bloc_layar/accounts/account_state.dart';
 import '../../../domain/entities/account.dart';
+import '../../../domain/entities/account_update_request.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/primary_button.dart';
 
@@ -58,6 +59,12 @@ class _EditAccountPageState extends State<EditAccountPage> {
       },
       child: AppScaffold(
         title: "Edit Account",
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+        ),
         body: Center(
           child: SingleChildScrollView(
             child: Container(
@@ -99,12 +106,20 @@ class _EditAccountPageState extends State<EditAccountPage> {
                             label: "Save Changes",
                             onPressed: () {
                               if (_formKey.currentState!.validate()) {
+                                final request = AccountUpdateRequestBuilder(
+                                  referenceNumber: account.referenceNumber,
+                                )
+                                    .withName(_name.text)
+                                    .withType(_type.text)
+                                    .withParentReference(_parentRef.text)
+                                    .build();
                                 context.read<AccountBloc>().add(
                                   AccountUpdateRequested(
-                                    referenceNumber: account.referenceNumber,
-                                    name: _name.text.trim(),
-                                    type: _type.text.trim(),
-                                    parentReference: _parentRef.text.trim().isEmpty ? null : _parentRef.text.trim(),
+                                    referenceNumber: request.referenceNumber,
+                                    name: request.name,
+                                    type: request.type,
+                                    parentReference: request.parentReference,
+                                    status: request.status,
                                   ),
                                 );
                               }

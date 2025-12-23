@@ -82,6 +82,10 @@ class _AccountDetailsPageState extends State<AccountDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AccountBloc, AccountState>(
+      buildWhen: (previous, current) =>
+      current is! AccountInterestLoading &&
+          current is! AccountInterestSuccess &&
+          current is! AccountInterestFailure,
       builder: (context, state) {
         if (state is AccountLoading) return const LoadingIndicator();
         if (state is AccountFailure) {
@@ -97,6 +101,13 @@ class _AccountDetailsPageState extends State<AccountDetailsPage> {
 
           return AppScaffold(
             title: "Account Details",
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+            ),
+
             showFab: false,
             body: SingleChildScrollView(
               child: Padding(

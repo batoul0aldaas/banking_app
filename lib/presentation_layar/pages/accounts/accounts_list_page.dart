@@ -5,6 +5,7 @@ import '../../../bloc_layar/accounts/account_event.dart';
 import '../../../bloc_layar/accounts/account_state.dart';
 import '../../../core/routes/app_routes.dart';
 import '../../../domain/entities/account.dart';
+import '../../../domain/entities/account_create_request.dart';
 import '../../widgets/app_scaffold.dart';
 import '../../widgets/card_account.dart';
 import '../../widgets/loading_indicator.dart';
@@ -26,27 +27,27 @@ class _AccountsListPageState extends State<AccountsListPage> {
   }
 
   Future<void> _showAddChildAccountDialog(String parentRef) async {
-    final _nameController = TextEditingController();
-    final _typeController = TextEditingController();
-    final _formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController();
+    final typeController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
 
     await showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Add Child Account"),
         content: Form(
-          key: _formKey,
+          key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
-                controller: _nameController,
+                controller: nameController,
                 decoration: const InputDecoration(labelText: "Account Name"),
                 validator: (v) => v == null || v.trim().isEmpty ? "Required" : null,
               ),
               const SizedBox(height: 8),
               TextFormField(
-                controller: _typeController,
+                controller: typeController,
                 decoration: const InputDecoration(labelText: "Account Type"),
                 validator: (v) => v == null || v.trim().isEmpty ? "Required" : null,
               ),
@@ -57,11 +58,17 @@ class _AccountsListPageState extends State<AccountsListPage> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
           ElevatedButton(
             onPressed: () {
-              if (_formKey.currentState!.validate()) {
+              if (formKey.currentState!.validate()) {
+                final builder = AccountCreateRequestBuilder()
+                    .withName(nameController.text)
+                    .withType(typeController.text)
+                    .withParentReference(parentRef);
+
+                final request = builder.build();
                 context.read<AccountBloc>().add(AccountCreateRequested(
-                  name: _nameController.text.trim(),
-                  type: _typeController.text.trim(),
-                  parentReference: parentRef,
+                  name: request.name,
+                  type: request.type,
+                  parentReference: request.parentReference,
                 ));
                 Navigator.pop(context);
               }
@@ -74,19 +81,24 @@ class _AccountsListPageState extends State<AccountsListPage> {
   }
 
   Widget _buildAccountTile(Account account, List<Account> allAccounts) {
-    // الحسابات الفرعية لهذا الحساب
+
     final subAccounts = allAccounts.where((a) => a.parentReference == account.referenceNumber).toList();
 
     return ExpansionTile(
       title: AccountCard(
         account: account,
-        onTap: () {
-          Navigator.pushNamed(
+        onTap: () async {
+          final refreshed = await Navigator.pushNamed(
             context,
             AppRoutes.accountDetails,
             arguments: account.referenceNumber,
           );
+
+          if (refreshed == true) {
+            context.read<AccountBloc>().add(AccountLoadRequested());
+          }
         },
+
       ),
       childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
       children: [
@@ -104,13 +116,18 @@ class _AccountsListPageState extends State<AccountsListPage> {
           padding: const EdgeInsets.only(left: 16, bottom: 8),
           child: AccountCard(
             account: sub,
-            onTap: () {
-              Navigator.pushNamed(
+            onTap: () async {
+              final refreshed = await Navigator.pushNamed(
                 context,
                 AppRoutes.accountDetails,
-                arguments: sub.referenceNumber,
+                arguments: account.referenceNumber,
               );
+
+              if (refreshed == true) {
+                context.read<AccountBloc>().add(AccountLoadRequested());
+              }
             },
+
           ),
         )),
       ],

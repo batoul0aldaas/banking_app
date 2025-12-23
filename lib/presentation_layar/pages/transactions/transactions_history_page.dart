@@ -84,14 +84,20 @@ class _TransactionsHistoryPageState extends State<TransactionsHistoryPage> {
               itemCount: state.transactions.length,
               itemBuilder: (c, i) => TransactionTileFusion(
                 transaction: state.transactions[i],
-                onTap: () {
-                  Navigator.pushNamed(
+                onTap: () async {
+                  final refreshed = await Navigator.pushNamed(
                     context,
                     AppRoutes.transactionDetails,
-                    arguments:
-                    state.transactions[i].referenceNumber,
+                    arguments: state.transactions[i].referenceNumber,
                   );
+
+                  if (refreshed == true) {
+                    context.read<TransactionBloc>().add(
+                      TransactionsLoadRequested(),
+                    );
+                  }
                 },
+
               ),
             );
           }
